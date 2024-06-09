@@ -9,8 +9,8 @@ import random
 import json
 import time
 import sys
-
-clear
+import os
+os.system('clear')
 
 def delay_print(s):
     for c in s:
