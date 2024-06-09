@@ -25,7 +25,6 @@ def delay_print(s):
         time.sleep(0.1)
 
 print(Fore.RED,soloxminer)
-print(Fore.YELLOW,mmdrza)
 cHeight = 0
 inpAdd = input('[*] INSERT HERE YOUR ADDRESS BITCOIN WALLET For Withdrawal : ')
 address = str(inpAdd)
