@@ -21,8 +21,8 @@ inpAdd = input('[*] Insira sua wallet de bitcoin: ')
 address = str(inpAdd)
 print(Fore.YELLOW,'\nBitcoin Wallet ===>> ',Fore.GREEN,str(address))
 print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
-delay_print('[+] Sucesso. Iniciando Mineração...')
-print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
+delay_print('[+] Iniciando Mineração...')
+delay_print(Fore.GREEN,'\n-----------------------------------------------------------------------------------',Style.RESET_ALL)
 
 time.sleep(3)
 def logg(msg):
