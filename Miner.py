@@ -154,10 +154,10 @@ def BitcoinMiner(restart=False):
             return True
 
 if __name__ == '__main__':
-Thread(target=newBlockListener).start()
-time.sleep(2)
-Thread(target=BitcoinMiner).start()
-
+    Thread(target=newBlockListener).start()
+    time.sleep(2)
+    Thread(target=BitcoinMiner).start()
+  
 # Calculate and display mining duration and estimated success time
 mining_duration = calculate_mining_duration(start_time)
 hashes_per_second = z / mining_duration if mining_duration > 0 else 0
