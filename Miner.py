@@ -9,9 +9,8 @@ import random
 import json
 import time
 import sys
-import cls
 
-cls
+clear
 
 def delay_print(s):
     for c in s:
