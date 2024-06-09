@@ -10,6 +10,8 @@ import json
 import time
 import sys
 
+cls
+
 def delay_print(s):
     for c in s:
         sys.stdout.write(c)
