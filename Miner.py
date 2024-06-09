@@ -22,7 +22,7 @@ address = str(inpAdd)
 print(Fore.YELLOW,'\nBitcoin Wallet ===>> ',Fore.GREEN,str(address))
 print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
 delay_print('[+] Iniciando Mineração...')
-delay_print('[■■■■■■■■■■]')
+print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
 
 time.sleep(3)
 def logg(msg):
