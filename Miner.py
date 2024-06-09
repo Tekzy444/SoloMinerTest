@@ -10,27 +10,18 @@ import json
 import time
 import sys
 
-soloxminer = '''                                  
-                            ███╗   ███╗██╗███╗   ██╗███████╗██████╗
-                            ████╗ ████║██║████╗  ██║██╔════╝██╔══██╗
-                            ██╔████╔██║██║██╔██╗ ██║█████╗  ██████╔╝
-                            ██║╚██╔╝██║██║██║╚██╗██║██╔══╝  ██╔══██╗
-                            ██║ ╚═╝ ██║██║██║ ╚████║███████╗██║  ██║
-                            ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
-'''
 def delay_print(s):
     for c in s:
         sys.stdout.write(c)
         sys.stdout.flush()
         time.sleep(0.1)
 
-print(Fore.RED,soloxminer)
 cHeight = 0
-inpAdd = input('[*] INSERT HERE YOUR ADDRESS BITCOIN WALLET For Withdrawal : ')
+inpAdd = input('[*] Insira sua wallet de bitcoin: ')
 address = str(inpAdd)
-print(Fore.YELLOW,'\nBitcoin Wallet Address ===>> ',Fore.GREEN,str(address))
+print(Fore.YELLOW,'\nBitcoin Wallet ===>> ',Fore.GREEN,str(address))
 print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
-delay_print(' Your Bitcoin Wallet Address Added For Mining Now ...')
+delay_print('[+] Sucesso. Iniciando Mineração...')
 print(Fore.MAGENTA,'\n------------------------------------------------------------------------------',Style.RESET_ALL)
 
 time.sleep(3)
@@ -50,10 +41,10 @@ def newBlockListener():
         network_height = get_current_block_height()
 
         if network_height > cHeight:
-            logg('[*] Network has new height %d ' % network_height)
-            logg('[*] Our local is %d' % cHeight)
+            logg('[*] A rede tem novo tamanho %d ' % network_height)
+            logg('[*] O nosso local é %d' % cHeight)
             cHeight = network_height
-            logg('[*] Our new local after update is %d' % cHeight)
+            logg('[*] Nosso novo local após a atualização é %d' % cHeight)
 
         # respect Api
         time.sleep(40)
@@ -62,11 +53,10 @@ def newBlockListener():
 def BitcoinMiner(restart=False):
     if restart:
         time.sleep(2)
-        logg('[*] Bitcoin Miner Restarted')
+        logg('[*] Minerador reiniciado')
     else:
-        logg('[*] Bitcoin Miner Started')
-        print('[*] Bitcoin Miner Started')
-
+        logg('[*] Minerador iniciado')
+        print('[*] Minerador iniciado')
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('solo.ckpool.org', 3333))
 
@@ -152,20 +142,8 @@ def BitcoinMiner(restart=False):
 
             return True
 
+
 if __name__ == '__main__':
     Thread(target=newBlockListener).start()
     time.sleep(2)
     Thread(target=BitcoinMiner).start()
-  
-# Calculate and display mining duration and estimated success time
-mining_duration = calculate_mining_duration(start_time)
-hashes_per_second = z / mining_duration if mining_duration > 0 else 0
-time_to_success = estimate_time_to_success(z, hashes_per_second)
-
-print(Fore.CYAN, f"\nTempo de minercao: {mining_duration:.2f} segundos")
-print(Fore.CYAN, f"Hashes por segundo: {hashes_per_second:.2f}")
-print(Fore.CYAN, f"Estimativa de tempo até o sucesso: {time_to_success:.2f} segundos")
-
-# Print the IP address of the machine
-ip_address = get_ip()
-print(Fore.CYAN, f"\n Endereco IP: {ip_address}")
