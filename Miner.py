@@ -1,0 +1,168 @@
+from colorama import Fore, Style
+from threading import Thread
+import requests
+import binascii
+import hashlib
+import logging
+import socket
+import random
+import json
+import time
+import sys
+
+soloxminer = '''
+
+    ███╗   ███╗██╗███╗   ██╗███████╗██████╗
+    ████╗ ████║██║████╗  ██║██╔════╝██╔══██╗
+    ██╔████╔██║██║██╔██╗ ██║█████╗  ██████╔╝
+    ██║╚██╔╝██║██║██║╚██╗██║██╔══╝  ██╔══██╗
+    ██║ ╚═╝ ██║██║██║ ╚████║███████╗██║  ██║
+    ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+'''
+
+def delay_print(s):
+    for c in s:
+        sys.stdout.write(c)
+        sys.stdout.flush()
+        time.sleep(0.1)
+
+def get_ip():
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+    return ip
+
+print(Fore.RED, soloxminer)
+print(Fore.YELLOW, 'SoloX Miner by Tekzy')
+cHeight = 0
+inpAdd = input('[*] INSERT HERE YOUR ADDRESS BITCOIN WALLET For Withdrawal: ')
+address = str(inpAdd)
+print(Fore.YELLOW, '\nBitcoin Wallet Address ===>> ', Fore.GREEN, str(address))
+print(Fore.MAGENTA, '\n------------------------------------------------------------------------------', Style.RESET_ALL)
+delay_print(' Your Bitcoin Wallet Address Added For Mining Now ...')
+print(Fore.MAGENTA, '\n------------------------------------------------------------------------------', Style.RESET_ALL)
+
+time.sleep(3)
+
+def logg(msg):
+    logging.basicConfig(level=logging.INFO, filename="miner.log", format='%(asctime)s %(message)s')
+    logging.info(msg)
+
+def get_current_block_height():
+    r = requests.get('https://blockchain.info/latestblock')
+    return int(r.json()['height'])
+
+def newBlockListener():
+    global cHeight
+
+    while True:
+        network_height = get_current_block_height()
+        if network_height > cHeight:
+            logg(f'[*] Network has new height {network_height}')
+            logg(f'[*] Our local is {cHeight}')
+            cHeight = network_height
+            logg(f'[*] Our new local after update is {cHeight}')
+        time.sleep(40)
+
+def calculate_mining_duration(start_time):
+    return time.time() - start_time
+
+def estimate_time_to_success(z, hashes_per_second):
+    if hashes_per_second > 0:
+        return (2 ** 256) / (hashes_per_second * 2 ** 32)
+    else:
+        return float('inf')
+
+def BitcoinMiner(restart=False):
+    if restart:
+        time.sleep(2)
+        logg('[*] Bitcoin Miner Restarted')
+    else:
+        logg('[*] Bitcoin Miner Started')
+        print('[*] Bitcoin Miner Started')
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(('solo.ckpool.org', 3333))
+
+    sock.sendall(b'{"id": 1, "method": "mining.subscribe", "params": []}\n')
+    lines = sock.recv(1024).decode().split('\n')
+
+    response = json.loads(lines[0])
+    sub_details, extranonce1, extranonce2_size = response['result']
+
+    sock.sendall(b'{"params": ["' + address.encode() + b'", "password"], "id": 2, "method": "mining.authorize"}\n')
+
+    response = b''
+    while response.count(b'\n') < 4 and not (b'mining.notify' in response):
+        response += sock.recv(1024)
+
+    responses = [json.loads(res) for res in response.decode().split('\n') if
+                 len(res.strip()) > 0 and 'mining.notify' in res]
+    job_id, prevhash, coinb1, coinb2, merkle_branch, version, nbits, ntime, clean_jobs = responses[0]['params']
+    target = (nbits[2:] + '00' * (int(nbits[:2], 16) - 3)).zfill(64)
+    extranonce2 = hex(random.randint(0, 2 ** 32 - 1))[2:].zfill(2 * extranonce2_size)
+
+    coinbase = coinb1 + extranonce1 + extranonce2 + coinb2
+    coinbase_hash_bin = hashlib.sha256(hashlib.sha256(binascii.unhexlify(coinbase)).digest()).digest()
+
+    merkle_root = coinbase_hash_bin
+    for h in merkle_branch:
+        merkle_root = hashlib.sha256(hashlib.sha256(merkle_root + binascii.unhexlify(h)).digest()).digest()
+
+    merkle_root = binascii.hexlify(merkle_root).decode()
+    merkle_root = ''.join([merkle_root[i] + merkle_root[i + 1] for i in range(0, len(merkle_root), 2)][::-1])
+
+    work_on = get_current_block_height()
+    print(Fore.GREEN, 'Working on current Network height', Fore.WHITE, work_on)
+    print(Fore.YELLOW, 'Current TARGET =', Fore.RED, target)
+
+    z = 0
+    start_time = time.time()
+    while True:
+        if cHeight > work_on:
+            logg('[*] Restarting Miner')
+            BitcoinMiner(restart=True)
+            break
+
+        nonce = hex(random.randint(0, 2 ** 32 - 1))[2:].zfill(8)
+        blockheader = version + prevhash + merkle_root + nbits + ntime + nonce + \
+                      '000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000'
+        hash_bin = hashlib.sha256(hashlib.sha256(binascii.unhexlify(blockheader)).digest()).digest()
+        hash_hex = binascii.hexlify(hash_bin).decode()
+
+        if hash_hex.startswith('000000000000000000000'):
+            logg(f'hash: {hash_hex}')
+        print(Fore.GREEN, str(z), ' HASH :', Fore.YELLOW, ' 000000000000000000000{}'.format(hash_hex), end='\r')
+
+        z += 1
+
+        if hash_hex < target:
+            print('[*] New block mined')
+            logg('[*] success!!')
+            logg(blockheader)
+            logg(f'hash: {hash_hex}')
+
+            payload = bytes('{"params": ["' + address + '", "' + job_id + '", "' + extranonce2 \
+                            + '", "' + ntime + '", "' + nonce + '"], "id": 1, "method": "mining.submit"}\n', 'utf-8')
+            sock.sendall(payload)
+            logg(payload)
+            ret = sock.recv(1024)
+            logg(ret)
+            return True
+
+        # Calculate and display mining duration and estimated success time
+        mining_duration = calculate_mining_duration(start_time)
+        hashes_per_second = z / mining_duration if mining_duration > 0 else 0
+        time_to_success = estimate_time_to_success(z, hashes_per_second)
+
+        print(Fore.CYAN, f"\nTempo de minercao: {mining_duration:.2f} segundos")
+        print(Fore.CYAN, f"Hashes por segundo: {hashes_per_second:.2f}")
+        print(Fore.CYAN, f"Estimativa de tempo até o sucesso: {time_to_success:.2f} segundos")
+
+if __name__ == '__main__':
+    Thread(target=newBlockListener).start()
+    time.sleep(2)
+    Thread(target=BitcoinMiner).start()
+
+# Print the IP address of the machine
+ip_address = get_ip()
+print(Fore.CYAN, f"\n Endereco IP: {ip_address}")
